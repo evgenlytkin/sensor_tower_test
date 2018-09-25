@@ -41,6 +41,14 @@ class CSV
 
     end
 
+    if current_value != ""
+      if in_quote and not in_quote_escape
+        raise ArgumentError.new("unclosed quote")
+      else
+        final_array[-1] << current_value
+      end
+    end
+
     final_array
   end
 
