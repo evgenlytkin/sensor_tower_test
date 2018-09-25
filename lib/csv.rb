@@ -22,6 +22,7 @@ class CSV
           in_quote_escape = false
         else
           current_value += char
+          next
         end
       end
 
@@ -32,6 +33,7 @@ class CSV
         current_value = ""
       elsif char == "\n"
         final_array[-1] << current_value
+        current_value = ""
         final_array << []
       else
         current_value += char
