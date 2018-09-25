@@ -26,7 +26,9 @@ describe CSV do
 
   it "returns argument error with unclosed quote CSV" do
     csv_with_error = "\"dog\",\"cat\",\"uhoh"
-    expect(CSV.parse(csv_with_error)).to raise_error(ArgumentError, "unclosed quote")
+    expect{CSV.parse(csv_with_error)}.to raise_error(ArgumentError, "unclosed quote")
+  end
+
   # Not best pratice to put benchmark code into Specs but for the sake 
   # of keeping things in 1 file for the code challenge
   after(:all) do
