@@ -1,4 +1,5 @@
 require 'csv'
+require 'benchmark'
 
 describe CSV do
 
@@ -26,6 +27,14 @@ describe CSV do
   it "returns argument error with unclosed quote CSV" do
     csv_with_error = "\"dog\",\"cat\",\"uhoh"
     expect(CSV.parse(csv_with_error)).to raise_error(ArgumentError, "unclosed quote")
+  # Not best pratice to put benchmark code into Specs but for the sake 
+  # of keeping things in 1 file for the code challenge
+  after(:all) do
+    complex_csv = "|alternate|\t|\"quote\"|\n\n|character|\t|hint: |||"
+    results = Benchmark.measure do
+     10_000.times { CSV.parse(complex_csv, "\t", "|") }
+    end
+    puts "\n\nBenchmark results: #{results}"
   end
 
 end
