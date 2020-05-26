@@ -2,41 +2,49 @@ require 'csv'
 require 'benchmark'
 
 describe CSV do
+  subject { CSV.parse(csv_string_data, separator, quote_symbol) }
 
-  it "returns valid array with basic CSV" do
-    basic_csv = "a,b,c\nd,e,f"
-    expect(CSV.parse(basic_csv)).to eq(
-      [["a", "b", "c"], ["d", "e", "f"]]
-    )
+  let(:separator) { "," }
+  let(:quote_symbol) { "\"" }
+
+  context 'when we have a new line symbol' do
+    let(:csv_string_data) { "a,b,c\nd,e,f" }
+    it { expect(subject).to eq([["a", "b", "c"], ["d", "e", "f"]])}
   end
 
-  it "returns valid array with quoted CSV" do
-    quoted_csv = "one,\"two wraps,\nonto \"\"two\"\" lines\",three\n4,,6"
-    expect(CSV.parse(quoted_csv)).to eq(
-      [["one", "two wraps,\nonto \"two\" lines", "three"], ["4", "", "6"]]
-    )
+  context 'when we have quoted and empty columns' do
+    let(:csv_string_data) { "one,\"two wraps,\nonto \"\"two\"\" lines\",three\n4,,6" }
+    it { expect(subject).to eq([["one", "two wraps,\nonto \"two\" lines", "three"], ["4", "", "6"]]) }
   end
 
-  it "returns valid array with complex CSV" do
-    complex_csv = "|alternate|\t|\"quote\"|\n\n|character|\t|hint: |||"
-    expect(CSV.parse(complex_csv, "\t", "|")).to eq(
-      [["alternate", "\"quote\""], [""], ["character", "hint: |"]]
-    )
+  context 'when an each word is a new column' do
+    let(:csv_string_data) { "each\tword\tis\ta\tnew\tcolumn" }
+    let(:separator) { "\t" }
+    let(:quote_symbol) { nil }
+    it { expect(subject).to eq([["each", "word", "is", "a", "new", "column"]]) }
   end
 
-  it "returns argument error with unclosed quote CSV" do
-    csv_with_error = "\"dog\",\"cat\",\"uhoh"
-    expect{CSV.parse(csv_with_error)}.to raise_error(ArgumentError, "unclosed quote")
+  context 'when we won\'t create new columns because it was in quotes' do
+    let(:csv_string_data) { "|the '\t' won't create new columns because it was|\tin\tquotes" }
+    let(:separator) { "\t" }
+    let(:quote_symbol) { "|" }
+    it { expect(subject).to eq([["the '\t' won't create new columns because it was", "in", "quotes"]]) }
   end
 
-  # Not best pratice to put benchmark code into Specs but for the sake 
-  # of keeping things in 1 file for the code challenge
-  after(:all) do
-    complex_csv = "|alternate|\t|\"quote\"|\n\n|character|\t|hint: |||"
-    results = Benchmark.measure do
-     10_000.times { CSV.parse(complex_csv, "\t", "|") }
-    end
-    puts "\n\nBenchmark results: #{results}"
+  context 'when we have a custom delimiter and a quotes symbol' do
+    let(:csv_string_data) { "|alternate|\t|\"quote\"|\n\n|character|\t|hint: |||" }
+    let(:separator) { "\t" }
+    let(:quote_symbol) { "|" }
+    it { expect(subject).to eq([["alternate", "\"quote\""], [""], ["character", "hint: |"]]) }
   end
 
+  context 'when there is an error' do
+    let(:csv_string_data) { "\"dog\",\"cat\",\"uhoh" }
+    it { expect{ subject }.to raise_error(ArgumentError, 'unclosed quote') }
+  end
+
+  context 'benchmark for one of cases' do
+    let(:csv_string_data) { "each\tword\tis\ta\tnew\tcolumn" }
+    it { puts Benchmark.measure { 100000.times { subject } } }
+  end
 end
